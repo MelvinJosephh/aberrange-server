@@ -10,7 +10,7 @@ const cors = require("cors");
 
 // Configure CORS
 const corsOptions = {
-    origin: "https://aberrange-server.netlify.app", // Allow this origin
+    origin: ["https://aberrange-server.netlify.app", "http://localhost:3000"],
     methods: "GET,POST,PUT,DELETE", // Specify allowed HTTP methods
     allowedHeaders: "Content-Type,Authorization", // Specify allowed headers
   };
