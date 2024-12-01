@@ -1,6 +1,7 @@
 const express = require("express");
 const multer = require("multer");
 const sharp = require("sharp");
+const cors = require("cors");
 const Blog = require("../models/Blog"); // Assuming Blog model is in models directory
 const router = express.Router();
 
@@ -8,42 +9,51 @@ const router = express.Router();
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
+// Configure CORS for this router
+const corsOptions = {
+    origin: ["https://aberrange-server.netlify.app", "http://localhost:5000", "http://localhost:3000", "http://localhost:3001"],
+    methods: "GET,POST,PUT,DELETE",
+    allowedHeaders: "Content-Type,Authorization",
+};
+router.use(cors(corsOptions));
+
 // Function to resize an image buffer
 const resizeImage = async (buffer, width, height) => {
-  return await sharp(buffer)
-    .resize(width, height)
-    .toBuffer();
+    return await sharp(buffer)
+        .resize(width, height)
+        .toBuffer();
 };
 
 // CREATE a new blog post with file upload and image resizing
 router.post("/", upload.fields([{ name: "featuredImage" }, { name: "authorImage" }]), async (req, res) => {
-  try {
-    const blogData = {
-      title: req.body.title,
-      content: req.body.content,
-      permalink: req.body.permalink,
-      category: req.body.category,
-      tags: JSON.parse(req.body.tags),
-      status: req.body.status,
-      excerpt: req.body.excerpt,
-      author: {
-        name: req.body.authorName,
-        profileImage: req.files["authorImage"]
-          ? await resizeImage(req.files["authorImage"][0].buffer, 150, 150) // Resize to 150x150 for author profile
-          : null,
-      },
-      featuredImage: req.files["featuredImage"]
-        ? await resizeImage(req.files["featuredImage"][0].buffer, 800, 600) // Resize to 800x600 for featured image
-        : null,
-    };
+    try {
+        const blogData = {
+            title: req.body.title,
+            content: req.body.content,
+            permalink: req.body.permalink,
+            category: req.body.category,
+            tags: JSON.parse(req.body.tags),
+            status: req.body.status,
+            excerpt: req.body.excerpt,
+            author: {
+                name: req.body.authorName,
+                profileImage: req.files["authorImage"]
+                    ? await resizeImage(req.files["authorImage"][0].buffer, 150, 150)
+                    : null,
+            },
+            featuredImage: req.files["featuredImage"]
+                ? await resizeImage(req.files["featuredImage"][0].buffer, 800, 600)
+                : null,
+        };
 
-    const blog = new Blog(blogData);
-    await blog.save();
-    res.status(201).json(blog);
-  } catch (error) {
-    res.status(400).json({ message: error.message });
-  }
+        const blog = new Blog(blogData);
+        await blog.save();
+        res.status(201).json(blog);
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
 });
+
 
 // UPDATE a blog post by permalink with file upload and image resizing
 router.put("/:permalink", upload.fields([{ name: "featuredImage" }, { name: "authorImage" }]), async (req, res) => {

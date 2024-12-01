@@ -3,11 +3,17 @@ const nodemailer = require("nodemailer");
 const path = require("path"); 
 
 exports.submitForm = async (req, res) => {
-  const { name, email, message } = req.body;
+  const { firstName,phone, companyName, lastName, email,subject, message } = req.body;
   console.log("Request body:", req.body);
   
   try {
-    const newContact = new Contact({ name, email, message });
+    const newContact = new Contact({  firstName,
+      lastName,
+      email,
+      phone,
+      subject,
+      companyName,
+      message, });
     await newContact.save();
 
     // Setup email transport
@@ -33,7 +39,7 @@ exports.submitForm = async (req, res) => {
       html: `
         <html>
           <body>
-            <h1>Hi ${name},</h1>
+            <h1>Hi ${firstName},</h1>
             <p>Thank you for your message. We'll get back to you soon.</p>
             <p>Best regards,<br />Aberrange Solutions</p>
             <img src="cid:${logoCid}" alt="Aberrange Solutions Logo" />
@@ -54,5 +60,29 @@ exports.submitForm = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });
+  }
+};
+
+
+// Fetch all messages for the frontend
+exports.getMessages = async (req, res) => {
+  try {
+    const messages = await Contact.find();
+
+    // Transform data into the format expected by Messages.jsx
+    const formattedMessages = messages.map((msg) => ({
+      id: msg._id, // Use MongoDB ID as unique identifier
+      sender: `${msg.firstName} ${msg.lastName}${msg.companyName ? ` (${msg.companyName})` : ""}`,
+      email: msg.email,
+      subject: msg.subject,
+      content: msg.message,
+      phone: msg.phone,
+      status: "Unread", // Default status for now
+    }));
+
+    res.status(200).json(formattedMessages);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Failed to fetch messages" });
   }
 };
