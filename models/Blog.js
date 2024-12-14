@@ -13,7 +13,7 @@ const BlogSchema = new mongoose.Schema({
     profileImage: { type: Buffer } // Storing as Buffer for image data
   },
   publishDate: { type: Date, default: Date.now },
-  readTime: { type: Number }, // estimated read time in minutes
+  readTime: { type: Number },
   views: { type: Number, default: 0 },
   likes: { type: Number, default: 0 },
   excerpt: { type: String, maxLength: 200 },
